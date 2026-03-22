@@ -1,4 +1,6 @@
-﻿namespace C__GestionDepenses.Models
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+
+namespace C__GestionDepenses.Models
 {
     public enum CategorieType
     {
@@ -14,7 +16,9 @@
         public CategorieType Type { get; set; }   // Depense or Revenu
 
         // Navigation properties
+        [ValidateNever]
         public ICollection<Revenu> Revenus { get; set; }
+        [ValidateNever]
         public ICollection<Depense> Depenses { get; set; }
     }
 }

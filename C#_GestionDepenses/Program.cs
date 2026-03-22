@@ -53,27 +53,66 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Seed roles on startup
+
+// Seed roles and a default Responsable user on startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    await SeedRoles(services);
+    await SeedRolesAndResponsable(services);
 }
 
 app.Run();
 
-// Method to create roles
-async Task SeedRoles(IServiceProvider serviceProvider)
+// Method to create roles and a default Responsable user
+async Task SeedRolesAndResponsable(IServiceProvider serviceProvider)
 {
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
 
     string[] roles = { "Responsable", "User" };
-
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
         {
-            await roleManager.CreateAsync(new IdentityRole(role));
+            var roleResult = await roleManager.CreateAsync(new IdentityRole(role));
+            if (!roleResult.Succeeded)
+            {
+                Console.WriteLine($"Failed to create role {role}: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+            }
+        }
+    }
+
+    // Create a default Responsable user if not exists
+    string responsableEmail = "responsable@admin.com";
+    string responsablePassword = "Responsable123!";
+    var responsableUser = await userManager.FindByEmailAsync(responsableEmail);
+    if (responsableUser == null)
+    {
+        responsableUser = new User { UserName = responsableEmail, Email = responsableEmail, FullName = "Responsable Admin" };
+        var result = await userManager.CreateAsync(responsableUser, responsablePassword);
+        if (result.Succeeded)
+        {
+            var addRoleResult = await userManager.AddToRoleAsync(responsableUser, "Responsable");
+            if (!addRoleResult.Succeeded)
+            {
+                Console.WriteLine($"Failed to add Responsable role: {string.Join(", ", addRoleResult.Errors.Select(e => e.Description))}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Failed to create Responsable user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+        }
+    }
+    else
+    {
+        // Ensure user is in Responsable role
+        if (!await userManager.IsInRoleAsync(responsableUser, "Responsable"))
+        {
+            var addRoleResult = await userManager.AddToRoleAsync(responsableUser, "Responsable");
+            if (!addRoleResult.Succeeded)
+            {
+                Console.WriteLine($"Failed to add Responsable role to existing user: {string.Join(", ", addRoleResult.Errors.Select(e => e.Description))}");
+            }
         }
     }
 }

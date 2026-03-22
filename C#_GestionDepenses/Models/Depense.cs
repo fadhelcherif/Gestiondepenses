@@ -1,4 +1,7 @@
-﻿namespace C__GestionDepenses.Models
+using System;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+
+namespace C__GestionDepenses.Models
 {
     public class Depense
     {
@@ -8,9 +11,11 @@
         public DateTime Date { get; set; }
 
         public int CategorieId { get; set; }
+        [ValidateNever]
         public Categorie Categorie { get; set; }
 
-        public string UserId { get; set; }
-        public User User { get; set; }
+        public string? UserId { get; set; }
+        [ValidateNever]
+        public User? User { get; set; }
     }
 }
