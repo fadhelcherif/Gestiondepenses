@@ -15,6 +15,8 @@ namespace C__GestionDepenses.Models
         public string? Description { get; set; }
         public CategorieType Type { get; set; }   // Depense or Revenu
 
+        public decimal? Seuil { get; set; }
+
         // Navigation properties
         [ValidateNever]
         public ICollection<Revenu> Revenus { get; set; }

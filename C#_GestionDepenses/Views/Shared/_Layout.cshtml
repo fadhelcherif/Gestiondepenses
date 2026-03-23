@@ -10,6 +10,16 @@
     <link rel="stylesheet" href="~/C__GestionDepenses.styles.css" asp-append-version="true" />
 </head>
 <body>
+    @{
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+        var isAuthPage = string.Equals(currentController, "Account", StringComparison.OrdinalIgnoreCase)
+            && (string.Equals(currentAction, "Login", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(currentAction, "Register", StringComparison.OrdinalIgnoreCase));
+    }
+
+    @if (!isAuthPage)
+    {
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
@@ -36,6 +46,12 @@
                     <ul class="navbar-nav">
                         @if (User.Identity.IsAuthenticated)
                         {
+                            @if (User.IsInRole("Responsable"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Create account</a>
+                                </li>
+                            }
                             <li class="nav-item">
                                 <span class="nav-link text-dark">Hello @User.Identity.Name!</span>
                             </li>
@@ -55,13 +71,11 @@
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
-                            </li>
                         }
                     </ul>
                 </div>
     </header>
+    }
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()

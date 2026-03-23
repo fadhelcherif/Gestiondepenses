@@ -9,11 +9,13 @@ namespace C__GestionDepenses.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager)
+        public AccountController(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<IdentityRole> roleManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _roleManager = roleManager;
         }
 
 
@@ -21,6 +23,10 @@ namespace C__GestionDepenses.Controllers
         [Authorize(Roles = "Responsable")]
         public IActionResult Register()
         {
+            ViewBag.Roles = _roleManager.Roles
+                .Select(r => r.Name)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .ToList();
             return View();
         }
 
@@ -31,14 +37,30 @@ namespace C__GestionDepenses.Controllers
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
+            {
+                ViewBag.Roles = _roleManager.Roles
+                    .Select(r => r.Name)
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
+                    .ToList();
                 return View(model);
+            }
 
             var user = new User { UserName = model.Email, Email = model.Email, FullName = model.FullName };
             var result = await _userManager.CreateAsync(user, model.Password);
 
             if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, "User"); // Always assign User role
+                if (!await _roleManager.RoleExistsAsync(model.Role))
+                {
+                    ModelState.AddModelError(nameof(model.Role), "Invalid role.");
+                    ViewBag.Roles = _roleManager.Roles
+                        .Select(r => r.Name)
+                        .Where(n => !string.IsNullOrWhiteSpace(n))
+                        .ToList();
+                    return View(model);
+                }
+
+                await _userManager.AddToRoleAsync(user, model.Role);
                 // Do not sign in the new user automatically
                 return RedirectToAction("Index", "Home");
             }
@@ -46,12 +68,18 @@ namespace C__GestionDepenses.Controllers
             foreach (var error in result.Errors)
                 ModelState.AddModelError("", error.Description);
 
+            ViewBag.Roles = _roleManager.Roles
+                .Select(r => r.Name)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .ToList();
             return View(model);
         }
 
         // GET: /Account/Login
         public IActionResult Login()
         {
+            if (User?.Identity?.IsAuthenticated == true)
+                return RedirectToAction("Index", "Home");
             return View();
         }
 

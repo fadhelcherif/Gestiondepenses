@@ -65,6 +65,16 @@ namespace C__GestionDepenses.Controllers
             Console.WriteLine("[DEBUG] Depense Create POST called");
             var depenseCategories = _context.Categories.Where(c => c.Type == CategorieType.Depense).ToList();
 
+            var selectedCategorie = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == depense.CategorieId);
+            if (selectedCategorie == null || selectedCategorie.Type != CategorieType.Depense)
+            {
+                ModelState.AddModelError(nameof(depense.CategorieId), "Invalid category.");
+            }
+            else if (selectedCategorie.Seuil.HasValue && depense.Montant > selectedCategorie.Seuil.Value)
+            {
+                ModelState.AddModelError(nameof(depense.Montant), $"Montant exceeds the allowed threshold ({selectedCategorie.Seuil.Value}).");
+            }
+
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(currentUserId))
             {
@@ -136,6 +146,16 @@ namespace C__GestionDepenses.Controllers
             if (id != depense.Id)
             {
                 return NotFound();
+            }
+
+            var selectedCategorie = await _context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == depense.CategorieId);
+            if (selectedCategorie == null || selectedCategorie.Type != CategorieType.Depense)
+            {
+                ModelState.AddModelError(nameof(depense.CategorieId), "Invalid category.");
+            }
+            else if (selectedCategorie.Seuil.HasValue && depense.Montant > selectedCategorie.Seuil.Value)
+            {
+                ModelState.AddModelError(nameof(depense.Montant), $"Montant exceeds the allowed threshold ({selectedCategorie.Seuil.Value}).");
             }
 
             var existing = await _context.Depenses.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id);

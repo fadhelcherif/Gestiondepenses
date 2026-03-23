@@ -21,9 +21,9 @@ namespace C__GestionDepenses.Data
 
             // Seed default categories
             builder.Entity<Categorie>().HasData(
-    new Categorie { Id = 1, Nom = "Salaire", Description = "Revenu du travail", Type = CategorieType.Revenu },
-    new Categorie { Id = 2, Nom = "Loyer", Description = "Paiement mensuel du logement", Type = CategorieType.Depense },
-    new Categorie { Id = 3, Nom = "Alimentation", Description = "Courses et repas", Type = CategorieType.Depense }
+    new Categorie { Id = 1, Nom = "Salaire", Description = "Revenu du travail", Type = CategorieType.Revenu, Seuil = null },
+    new Categorie { Id = 2, Nom = "Loyer", Description = "Paiement mensuel du logement", Type = CategorieType.Depense, Seuil = 2000m },
+    new Categorie { Id = 3, Nom = "Alimentation", Description = "Courses et repas", Type = CategorieType.Depense, Seuil = 800m }
 );
         }
     }
