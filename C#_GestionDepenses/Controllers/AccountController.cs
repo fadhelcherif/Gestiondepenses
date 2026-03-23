@@ -79,7 +79,9 @@ namespace C__GestionDepenses.Controllers
         public IActionResult Login()
         {
             if (User?.Identity?.IsAuthenticated == true)
-                return RedirectToAction("Index", "Home");
+                return User.IsInRole("Responsable")
+                    ? RedirectToAction("Index", "Admin")
+                    : RedirectToAction("Index", "Home");
             return View();
         }
 
@@ -94,7 +96,13 @@ namespace C__GestionDepenses.Controllers
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
 
             if (result.Succeeded)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (user != null && await _userManager.IsInRoleAsync(user, "Responsable"))
+                    return RedirectToAction("Index", "Admin");
+
                 return RedirectToAction("Index", "Home");
+            }
 
             ModelState.AddModelError("", "Invalid login attempt");
             return View(model);

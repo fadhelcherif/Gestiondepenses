@@ -1,0 +1,68 @@
+@model C__GestionDepenses.Models.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1>Responsable Dashboard</h1>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total Revenus</h5>
+                <p class="card-text fw-bold">@Model.TotalRevenus</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Total Dépenses</h5>
+                <p class="card-text fw-bold">@Model.TotalDepenses</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Balance</h5>
+                <p class="card-text fw-bold @(Model.Balance >= 0 ? "text-success" : "text-danger")">@Model.Balance</p>
+                <small class="text-muted">@(Model.Balance >= 0 ? "Gain" : "Déficit")</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Revenus</th>
+            <th>Dépenses</th>
+            <th>Balance</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in Model.Users)
+        {
+            <tr>
+                <td>@(string.IsNullOrWhiteSpace(u.FullName) ? u.Email : $"{u.FullName} ({u.Email})")</td>
+                <td>@u.TotalRevenus</td>
+                <td>@u.TotalDepenses</td>
+                <td class="@(u.Balance >= 0 ? "text-success" : "text-danger")">@u.Balance</td>
+                <td>
+                    @if (u.Balance >= 0)
+                    {
+                        <span class="badge bg-success">Gain</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Déficit</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
