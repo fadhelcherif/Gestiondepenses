@@ -1,0 +1,106 @@
+@model C__GestionDepenses.Models.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "My statistics";
+    var me = Model.Users.FirstOrDefault();
+}
+
+<h1>My statistics</h1>
+
+@if (me == null)
+{
+    <div class="alert alert-warning">No data.</div>
+}
+else
+{
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">This month Revenus</h5>
+                    <p class="card-text fw-bold">@me.ThisMonthRevenus</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">This month Dépenses</h5>
+                    <p class="card-text fw-bold">@me.ThisMonthDepenses</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">This month Balance</h5>
+                    <p class="card-text fw-bold @(me.ThisMonthBalance >= 0 ? "text-success" : "text-danger")">@me.ThisMonthBalance</p>
+                    <small class="text-muted">@(me.ThisMonthBalance >= 0 ? "Gain" : "Déficit")</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Revenus</h5>
+                    <p class="card-text fw-bold">@me.TotalRevenus</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Dépenses</h5>
+                    <p class="card-text fw-bold">@me.TotalDepenses</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Balance</h5>
+                    <p class="card-text fw-bold @(me.Balance >= 0 ? "text-success" : "text-danger")">@me.Balance</p>
+                    <small class="text-muted">@(me.Balance >= 0 ? "Gain" : "Déficit")</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Top Dépense</h5>
+                    @if (me.TopDepenseMontant.HasValue)
+                    {
+                        <p class="card-text fw-bold">@me.TopDepenseMontant</p>
+                        <small class="text-muted">@me.TopDepenseCategorie - @me.TopDepenseDescription</small>
+                    }
+                    else
+                    {
+                        <p class="card-text text-muted">No expenses yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Top Revenu</h5>
+                    @if (me.TopRevenuMontant.HasValue)
+                    {
+                        <p class="card-text fw-bold">@me.TopRevenuMontant</p>
+                        <small class="text-muted">@me.TopRevenuCategorie - @me.TopRevenuDescription</small>
+                    }
+                    else
+                    {
+                        <p class="card-text text-muted">No income yet.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}

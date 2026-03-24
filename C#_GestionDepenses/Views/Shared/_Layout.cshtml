@@ -36,9 +36,13 @@
                                 <a class="nav-link text-dark" asp-controller="Admin" asp-action="Index">Dashboard</a>
                             </li>
                         }
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Dashboard" asp-action="Index">My statistics</a>
+                            </li>
+                        }
+                        
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Categories" asp-action="Index">Categories</a>
                         </li>

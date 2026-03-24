@@ -81,7 +81,7 @@ namespace C__GestionDepenses.Controllers
             if (User?.Identity?.IsAuthenticated == true)
                 return User.IsInRole("Responsable")
                     ? RedirectToAction("Index", "Admin")
-                    : RedirectToAction("Index", "Home");
+                    : RedirectToAction("Index", "Dashboard");
             return View();
         }
 
@@ -101,7 +101,7 @@ namespace C__GestionDepenses.Controllers
                 if (user != null && await _userManager.IsInRoleAsync(user, "Responsable"))
                     return RedirectToAction("Index", "Admin");
 
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Dashboard");
             }
 
             ModelState.AddModelError("", "Invalid login attempt");

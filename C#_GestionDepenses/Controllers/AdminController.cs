@@ -20,6 +20,10 @@ namespace C__GestionDepenses.Controllers
         // GET: /Admin
         public async Task<IActionResult> Index()
         {
+            var now = DateTime.Now;
+            var monthStart = new DateTime(now.Year, now.Month, 1);
+            var nextMonthStart = monthStart.AddMonths(1);
+
             var users = await _context.Users
                 .Select(u => new UserFinanceSummaryViewModel
                 {
@@ -31,6 +35,13 @@ namespace C__GestionDepenses.Controllers
                         .Sum(r => (decimal?)r.Montant) ?? 0m,
                     TotalDepenses = _context.Depenses
                         .Where(d => d.UserId == u.Id)
+                        .Sum(d => (decimal?)d.Montant) ?? 0m
+                    ,
+                    ThisMonthRevenus = _context.Revenus
+                        .Where(r => r.UserId == u.Id && r.Date >= monthStart && r.Date < nextMonthStart)
+                        .Sum(r => (decimal?)r.Montant) ?? 0m,
+                    ThisMonthDepenses = _context.Depenses
+                        .Where(d => d.UserId == u.Id && d.Date >= monthStart && d.Date < nextMonthStart)
                         .Sum(d => (decimal?)d.Montant) ?? 0m
                 })
                 .OrderBy(u => u.Email)

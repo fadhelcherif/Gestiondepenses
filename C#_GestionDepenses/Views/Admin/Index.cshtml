@@ -10,6 +10,34 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
+                <h5 class="card-title">This month Revenus</h5>
+                <p class="card-text fw-bold">@Model.ThisMonthRevenus</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">This month Dépenses</h5>
+                <p class="card-text fw-bold">@Model.ThisMonthDepenses</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">This month Balance</h5>
+                <p class="card-text fw-bold @(Model.ThisMonthBalance >= 0 ? "text-success" : "text-danger")">@Model.ThisMonthBalance</p>
+                <small class="text-muted">@(Model.ThisMonthBalance >= 0 ? "Gain" : "Déficit")</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
                 <h5 class="card-title">Total Revenus</h5>
                 <p class="card-text fw-bold">@Model.TotalRevenus</p>
             </div>
@@ -42,6 +70,9 @@
             <th>Dépenses</th>
             <th>Balance</th>
             <th>Status</th>
+            <th>This month Revenus</th>
+            <th>This month Dépenses</th>
+            <th>This month Balance</th>
         </tr>
     </thead>
     <tbody>
@@ -62,6 +93,9 @@
                         <span class="badge bg-danger">Déficit</span>
                     }
                 </td>
+                <td>@u.ThisMonthRevenus</td>
+                <td>@u.ThisMonthDepenses</td>
+                <td class="@(u.ThisMonthBalance >= 0 ? "text-success" : "text-danger")">@u.ThisMonthBalance</td>
             </tr>
         }
     </tbody>

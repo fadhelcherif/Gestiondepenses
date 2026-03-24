@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,14 @@ using C__GestionDepenses.Models;
 
 namespace C__GestionDepenses.Controllers
 {
+    [Authorize]
     public class RevenusController : Controller
     {
         private readonly ApplicationDbContext _context;
+
+        private bool IsResponsable => User.IsInRole("Responsable");
+
+        private string? CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         public RevenusController(ApplicationDbContext context)
         {
@@ -23,8 +29,21 @@ namespace C__GestionDepenses.Controllers
         // GET: Revenus
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Revenus.Include(r => r.Categorie).Include(r => r.User);
-            return View(await applicationDbContext.ToListAsync());
+            var query = _context.Revenus
+                .Include(r => r.Categorie)
+                .Include(r => r.User)
+                .AsQueryable();
+
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                query = query.Where(r => r.UserId == uid);
+            }
+
+            return View(await query.ToListAsync());
         }
 
         // GET: Revenus/Details/5
@@ -44,6 +63,16 @@ namespace C__GestionDepenses.Controllers
                 return NotFound();
             }
 
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(revenu.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
+
             return View(revenu);
         }
 
@@ -53,7 +82,6 @@ namespace C__GestionDepenses.Controllers
             Console.WriteLine("[DEBUG] Revenu Create GET called");
             var revenuCategories = _context.Categories.Where(c => c.Type == CategorieType.Revenu).ToList();
             ViewData["CategorieId"] = new SelectList(revenuCategories, "Id", "Nom");
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName");
             return View();
         }
 
@@ -122,6 +150,16 @@ namespace C__GestionDepenses.Controllers
             {
                 return NotFound();
             }
+
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(revenu.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
             var revenuCategories = _context.Categories.Where(c => c.Type == CategorieType.Revenu).ToList();
             ViewData["CategorieId"] = new SelectList(revenuCategories, "Id", "Nom", revenu.CategorieId);
             return View(revenu);
@@ -144,6 +182,17 @@ namespace C__GestionDepenses.Controllers
             {
                 return NotFound();
             }
+
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(existing.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
+
             revenu.UserId = existing.UserId;
 
             if (!ModelState.IsValid)
@@ -204,6 +253,16 @@ namespace C__GestionDepenses.Controllers
                 return NotFound();
             }
 
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(revenu.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
+
             return View(revenu);
         }
 
@@ -213,6 +272,19 @@ namespace C__GestionDepenses.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var revenu = await _context.Revenus.FindAsync(id);
+            if (revenu == null)
+                return NotFound();
+
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(revenu.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
+
             if (revenu != null)
             {
                 _context.Revenus.Remove(revenu);

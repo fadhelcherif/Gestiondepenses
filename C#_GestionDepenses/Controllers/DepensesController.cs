@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,14 @@ using C__GestionDepenses.Models;
 
 namespace C__GestionDepenses.Controllers
 {
+    [Authorize]
     public class DepensesController : Controller
     {
         private readonly ApplicationDbContext _context;
+
+        private bool IsResponsable => User.IsInRole("Responsable");
+
+        private string? CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         public DepensesController(ApplicationDbContext context)
         {
@@ -23,8 +29,21 @@ namespace C__GestionDepenses.Controllers
         // GET: Depenses
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Depenses.Include(d => d.Categorie).Include(d => d.User);
-            return View(await applicationDbContext.ToListAsync());
+            var query = _context.Depenses
+                .Include(d => d.Categorie)
+                .Include(d => d.User)
+                .AsQueryable();
+
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                query = query.Where(d => d.UserId == uid);
+            }
+
+            return View(await query.ToListAsync());
         }
 
         // GET: Depenses/Details/5
@@ -44,6 +63,16 @@ namespace C__GestionDepenses.Controllers
                 return NotFound();
             }
 
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(depense.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
+
             return View(depense);
         }
 
@@ -53,7 +82,6 @@ namespace C__GestionDepenses.Controllers
             Console.WriteLine("[DEBUG] Depense Create GET called");
             var depenseCategories = _context.Categories.Where(c => c.Type == CategorieType.Depense).ToList();
             ViewData["CategorieId"] = new SelectList(depenseCategories, "Id", "Nom");
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "UserName");
             return View();
         }
 
@@ -131,6 +159,16 @@ namespace C__GestionDepenses.Controllers
                 return NotFound();
             }
 
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(depense.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
+
             var depenseCategories = _context.Categories.Where(c => c.Type == CategorieType.Depense).ToList();
             ViewData["CategorieId"] = new SelectList(depenseCategories, "Id", "Nom", depense.CategorieId);
             return View(depense);
@@ -163,6 +201,17 @@ namespace C__GestionDepenses.Controllers
             {
                 return NotFound();
             }
+
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(existing.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
+
             depense.UserId = existing.UserId;
 
             if (!ModelState.IsValid)
@@ -224,6 +273,16 @@ namespace C__GestionDepenses.Controllers
                 return NotFound();
             }
 
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(depense.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
+
             return View(depense);
         }
 
@@ -233,6 +292,19 @@ namespace C__GestionDepenses.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var depense = await _context.Depenses.FindAsync(id);
+            if (depense == null)
+                return NotFound();
+
+            if (!IsResponsable)
+            {
+                var uid = CurrentUserId;
+                if (string.IsNullOrWhiteSpace(uid))
+                    return Challenge();
+
+                if (!string.Equals(depense.UserId, uid, StringComparison.Ordinal))
+                    return Forbid();
+            }
+
             if (depense != null)
             {
                 _context.Depenses.Remove(depense);
