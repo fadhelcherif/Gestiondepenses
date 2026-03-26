@@ -1,10 +1,12 @@
 using C__GestionDepenses.Data;
 using C__GestionDepenses.Models;
+using C__GestionDepenses.Services.Pdf;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Security.Claims;
+using QuestPDF.Fluent;
 
 namespace C__GestionDepenses.Controllers
 {
@@ -21,9 +23,6 @@ namespace C__GestionDepenses.Controllers
         // GET: /Dashboard
         public async Task<IActionResult> Index()
         {
-            if (User.IsInRole("Responsable"))
-                return RedirectToAction("Index", "Admin");
-
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
                 return Challenge();
@@ -92,6 +91,46 @@ namespace C__GestionDepenses.Controllers
             };
 
             return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportMonthlyPdf(int? year = null, int? month = null)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId))
+                return Challenge();
+
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+                return Challenge();
+
+            var now = DateTime.Now;
+            var y = year ?? now.Year;
+            var m = month ?? now.Month;
+
+            var monthStart = new DateTime(y, m, 1);
+            var nextMonthStart = monthStart.AddMonths(1);
+
+            var depenses = await _context.Depenses
+                .AsNoTracking()
+                .Include(d => d.Categorie)
+                .Where(d => d.UserId == userId && d.Date >= monthStart && d.Date < nextMonthStart)
+                .OrderByDescending(d => d.Date)
+                .ToListAsync();
+
+            var revenus = await _context.Revenus
+                .AsNoTracking()
+                .Include(r => r.Categorie)
+                .Where(r => r.UserId == userId && r.Date >= monthStart && r.Date < nextMonthStart)
+                .OrderByDescending(r => r.Date)
+                .ToListAsync();
+
+            var title = string.IsNullOrWhiteSpace(user.FullName) ? (user.Email ?? "Monthly activity") : user.FullName;
+            var document = new MonthlyActivityPdfDocument(title, monthStart, depenses, revenus);
+
+            var pdfBytes = document.GeneratePdf();
+            var fileName = $"activity-{y:D4}-{m:D2}.pdf";
+            return File(pdfBytes, "application/pdf", fileName);
         }
     }
 }

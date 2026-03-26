@@ -3,9 +3,13 @@
 @{
     ViewData["Title"] = "My statistics";
     var me = Model.Users.FirstOrDefault();
+    var now = DateTime.Now;
 }
 
-<h1>My statistics</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">My statistics</h1>
+    <a class="btn btn-outline-primary" asp-controller="Dashboard" asp-action="ExportMonthlyPdf" asp-route-year="@now.Year" asp-route-month="@now.Month">Export PDF (this month)</a>
+</div>
 
 @if (me == null)
 {
