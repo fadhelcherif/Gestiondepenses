@@ -107,4 +107,59 @@ else
             </div>
         </div>
     </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Budget progress (this month)</h5>
+            @if (me.BudgetsThisMonth == null || me.BudgetsThisMonth.Count == 0)
+            {
+                <p class="text-muted mb-0">No budgets configured (no categories with seuil).</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th class="text-end">Spent</th>
+                                <th class="text-end">Seuil</th>
+                                <th style="width:40%">Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var b in me.BudgetsThisMonth)
+                            {
+                                var percentRaw = b.PercentUsed;
+                                var percent = percentRaw < 0 ? 0 : percentRaw;
+                                var percentClamped = percent > 100 ? 100 : percent;
+                                var barClass = b.IsOver ? "bg-danger" : (percentRaw >= 80 ? "bg-warning" : "bg-success");
+
+                                <tr>
+                                    <td>@b.CategoryName</td>
+                                    <td class="text-end">@b.SpentThisMonth</td>
+                                    <td class="text-end">@b.Seuil</td>
+                                    <td>
+                                        <div class="progress" style="height: 18px;">
+                                            <div class="progress-bar @barClass" role="progressbar" style="width: @percentClamped.ToString("0")%" aria-valuenow="@percentClamped" aria-valuemin="0" aria-valuemax="100">
+                                                @percentRaw.ToString("0")%
+                                            </div>
+                                        </div>
+                                        @if (b.IsOver)
+                                        {
+                                            <small class="text-danger">Over budget by @(-b.Remaining)</small>
+                                        }
+                                        else
+                                        {
+                                            <small class="text-muted">Remaining @b.Remaining</small>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
 }

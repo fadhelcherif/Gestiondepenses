@@ -3,6 +3,17 @@ using System.Linq;
 
 namespace C__GestionDepenses.Models
 {
+    public class CategoryBudgetItemViewModel
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
+        public decimal Seuil { get; set; }
+        public decimal SpentThisMonth { get; set; }
+        public decimal Remaining => Seuil - SpentThisMonth;
+        public decimal PercentUsed => Seuil <= 0 ? 0 : (SpentThisMonth / Seuil) * 100m;
+        public bool IsOver => SpentThisMonth > Seuil;
+    }
+
     public class UserFinanceSummaryViewModel
     {
         public string UserId { get; set; } = string.Empty;
@@ -24,6 +35,8 @@ namespace C__GestionDepenses.Models
         public string? TopRevenuDescription { get; set; }
         public decimal? TopRevenuMontant { get; set; }
         public string? TopRevenuCategorie { get; set; }
+
+        public List<CategoryBudgetItemViewModel> BudgetsThisMonth { get; set; } = new();
     }
 
     public class AdminDashboardViewModel

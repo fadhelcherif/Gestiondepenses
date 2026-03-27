@@ -55,6 +55,33 @@ namespace C__GestionDepenses.Controllers
                     .SumAsync(d => (decimal?)d.Montant) ?? 0m,
             };
 
+            var spentByCategory = await _context.Depenses
+                .AsNoTracking()
+                .Where(d => d.UserId == user.Id && d.Date >= monthStart && d.Date < nextMonthStart)
+                .GroupBy(d => d.CategorieId)
+                .Select(g => new { CategoryId = g.Key, Total = g.Sum(x => x.Montant) })
+                .ToListAsync();
+
+            var spentLookup = spentByCategory.ToDictionary(x => x.CategoryId, x => x.Total);
+
+            var budgetCategories = await _context.Categories
+                .AsNoTracking()
+                .Where(c => c.Type == CategorieType.Depense && c.Seuil.HasValue)
+                .OrderBy(c => c.Nom)
+                .Select(c => new { c.Id, c.Nom, Seuil = c.Seuil!.Value })
+                .ToListAsync();
+
+            summary.BudgetsThisMonth = budgetCategories
+                .Select(c => new CategoryBudgetItemViewModel
+                {
+                    CategoryId = c.Id,
+                    CategoryName = c.Nom,
+                    Seuil = c.Seuil,
+                    SpentThisMonth = spentLookup.TryGetValue(c.Id, out var total) ? total : 0m
+                })
+                .OrderByDescending(x => x.PercentUsed)
+                .ToList();
+
             var topDepense = await _context.Depenses
                 .AsNoTracking()
                 .Include(d => d.Categorie)
